@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Điểm Thi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-5">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Quản Lý Điểm Thi Cá Nhân</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <input type="text" id="subject" placeholder="Tên môn học" class="border p-2 rounded">
+            <input type="number" id="score" placeholder="Điểm số" class="border p-2 rounded">
+            <button onclick="addScore()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Thêm Điểm</button>
+        </div>
+
+        <table class="w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-2">Môn Học</th>
+                    <th class="border p-2">Điểm</th>
+                    <th class="border p-2">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="scoreTable">
+                </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot } 
+               from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Cấu hình của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKqA6gQHxw6fG8e8XIooQVKUU_rPsm5-A",
+            authDomain: "trinhthumai-3adde.firebaseapp.com",
+            projectId: "trinhthumai-3adde",
+            storageBucket: "trinhthumai-3adde.firebasestorage.app",
+            messagingSenderId: "607471421991",
+            appId: "1:607471421991:web:4afdb0b1e9d4d438389c02",
+            measurementId: "G-7V0Y7D4JKQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const scoresCol = collection(db, 'scores');
+
+        // Hàm thêm điểm
+        window.addScore = async () => {
+            const subject = document.getElementById('subject').value;
+            const score = document.getElementById('score').value;
+
+            if (subject && score) {
+                await addDoc(scoresCol, { subject, score: Number(score) });
+                document.getElementById('subject').value = '';
+                document.getElementById('score').value = '';
+            } else {
+                alert("Vui lòng nhập đủ tên môn và điểm!");
+            }
+        };
+
+        // Hàm xóa điểm
+        window.deleteScore = async (id) => {
+            await deleteDoc(doc(db, "scores", id));
+        };
+
+        // Lắng nghe dữ liệu thay đổi theo thời gian thực
+        onSnapshot(scoresCol, (snapshot) => {
+            const tableBody = document.getElementById('scoreTable');
+            tableBody.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="border p-2 text-center">${data.subject}</td>
+                        <td class="border p-2 text-center font-bold text-red-500">${data.score}</td>
+                        <td class="border p-2 text-center">
+                            <button onclick="deleteScore('${doc.id}')" class="text-red-500 underline text-sm">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
